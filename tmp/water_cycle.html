@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Water Cycle</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #e0f7fa;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #stage {
+            width: 800px;
+            height: 500px;
+            background: linear-gradient(#4fc3f7 0%, #81d4fa 60%, #4caf50 60%, #388e3c 100%);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 4px solid #fff;
+        }
+        .ocean {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 40%;
+            height: 40%;
+            background: #0277bd;
+            border-top-left-radius: 100px;
+        }
+        .sun {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            width: 80px;
+            height: 80px;
+            background: #ffeb3b;
+            border-radius: 50%;
+            box-shadow: 0 0 50px #ffeb3b;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .sun:hover { transform: scale(1.1); }
+        .cloud {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.5s;
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+        }
+        .info-box {
+            margin-top: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            width: 800px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .label {
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .label:hover { border-color: #0288d1; color: #0288d1; }
+        .vapor {
+            position: absolute;
+            width: 4px;
+            height: 15px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 2px;
+            animation: rise 3s infinite linear;
+        }
+        @keyframes rise {
+            from { transform: translateY(0) opacity(1); }
+            to { transform: translateY(-100px) opacity(0); }
+        }
+        .drop {
+            position: absolute;
+            width: 3px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: fall 1s infinite linear;
+        }
+        @keyframes fall {
+            from { transform: translateY(0); }
+            to { transform: translateY(200px); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Water Cycle</h1>
+    
+    <div id="stage">
+        <div class="ocean"></div>
+        <div class="sun" id="sun-btn"></div>
+        
+        <div id="labels">
+            <div class="label" style="bottom: 100px; right: 50px;" data-id="evap">Evaporation</div>
+            <div class="label" style="top: 100px; right: 200px;" data-id="cond">Condensation</div>
+            <div class="label" style="top: 250px; left: 150px;" data-id="prec">Precipitation</div>
+            <div class="label" style="bottom: 120px; left: 200px;" data-id="runoff">Runoff</div>
+            <div class="label" style="bottom: 200px; left: 100px;" data-id="trans">Transpiration</div>
+        </div>
+
+        <div id="clouds">
+            <div class="cloud" style="top: 50px; right: 150px; width: 100px; height: 40px;"></div>
+            <div class="cloud" style="top: 80px; left: 300px; width: 120px; height: 50px;"></div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h2 id="process-name">Click a process to learn more!</h2>
+        <p id="process-desc">Water is always moving. Explore the stages of the water cycle by clicking the labels or elements in the diagram.</p>
+    </div>
+
+    <script>
+        const infoName = document.getElementById('process-name');
+        const infoDesc = document.getElementById('process-desc');
+        const stage = document.getElementById('stage');
+        
+        const processes = {
+            evap: {
+                title: "Evaporation",
+                desc: "The sun heats up water in rivers, lakes, and oceans and turns it into vapor or steam. The water vapor leaves the river, lake, or ocean and goes into the air."
+            },
+            cond: {
+                title: "Condensation",
+                desc: "Water vapor in the air gets cold and changes back into liquid, forming clouds. This is called condensation."
+            },
+            prec: {
+                title: "Precipitation",
+                desc: "Precipitation occurs when so much water has condensed that the air cannot hold it anymore. The clouds get heavy and water falls back to the earth in the form of rain, hail, sleet or snow."
+            },
+            runoff: {
+                title: "Runoff",
+                desc: "When rain falls on the land, some of it is absorbed by the ground. The rest flows over the surface in streams and rivers back to the oceans."
+            },
+            trans: {
+                title: "Transpiration",
+                desc: "Plants as well as people 'sweat'. Transpiration is the process by which plants lose water out of their leaves."
+            }
+        };
+
+        document.querySelectorAll('.label').forEach(label => {
+            label.onclick = () => {
+                const id = label.dataset.id;
+                infoName.textContent = processes[id].title;
+                infoDesc.textContent = processes[id].desc;
+                triggerEffect(id);
+            };
+        });
+
+        function triggerEffect(id) {
+            clearEffects();
+            if (id === 'evap') {
+                for(let i=0; i<15; i++) {
+                    const v = document.createElement('div');
+                    v.className = 'vapor';
+                    v.style.left = (600 + Math.random() * 200) + 'px';
+                    v.style.bottom = (100 + Math.random() * 50) + 'px';
+                    v.style.animationDelay = (Math.random() * 2) + 's';
+                    stage.appendChild(v);
+                }
+            } else if (id === 'prec') {
+                for(let i=0; i<30; i++) {
+                    const d = document.createElement('div');
+                    d.className = 'drop';
+                    d.style.left = (100 + Math.random() * 300) + 'px';
+                    d.style.top = (150 + Math.random() * 50) + 'px';
+                    d.style.animationDelay = (Math.random() * 1) + 's';
+                    stage.appendChild(d);
+                }
+            }
+        }
+
+        function clearEffects() {
+            document.querySelectorAll('.vapor, .drop').forEach(el => el.remove());
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraction Cake Visualizer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fffaf0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #5d4037;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(139, 69, 19, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .cake-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+        }
+
+        .cake {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #ffe0b2;
+            overflow: hidden;
+            position: relative;
+            border: 4px solid #8d6e63;
+        }
+
+        .slice {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .fraction-input {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 24px;
+        }
+
+        .fraction-input input {
+            width: 50px;
+            padding: 5px;
+            text-align: center;
+            border: 2px solid #8d6e63;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+
+        .fraction-line {
+            width: 40px;
+            height: 2px;
+            background: #8d6e63;
+            margin: 2px 0;
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color: #ffb74d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .button:hover {
+            background-color: #ffa726;
+        }
+
+        .info {
+            margin-top: 20px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        canvas {
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fraction Cake Visualizer</h1>
+        <p>Slice the cake to see how fractions look!</p>
+
+        <div class="cake-container">
+            <canvas id="cakeCanvas" width="200" height="200"></canvas>
+        </div>
+
+        <div class="fraction-input">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <input type="number" id="numerator" value="1" min="0">
+                <div class="fraction-line"></div>
+                <input type="number" id="denominator" value="4" min="1">
+            </div>
+            <span>=</span>
+            <span id="percentage">25%</span>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="updateCake()">Visualize Fraction</button>
+            <div class="info" id="info">
+                This is <strong>1/4</strong> of the cake.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('cakeCanvas');
+        const ctx = canvas.getContext('2d');
+        const numInput = document.getElementById('numerator');
+        const denInput = document.getElementById('denominator');
+        const percentageEl = document.getElementById('percentage');
+        const infoEl = document.getElementById('info');
+
+        function drawCake(numerator, denominator) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 90;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw whole cake (background)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffe0b2';
+            ctx.fill();
+            ctx.strokeStyle = '#8d6e63';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Draw slices/grid
+            ctx.beginPath();
+            for (let i = 0; i < denominator; i++) {
+                const angle = (i / denominator) * 2 * Math.PI;
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(
+                    centerX + radius * Math.cos(angle),
+                    centerY + radius * Math.sin(angle)
+                );
+            }
+            ctx.strokeStyle = 'rgba(141, 110, 99, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw filled slices
+            if (numerator > 0) {
+                const startAngle = -Math.PI / 2; // Start from top
+                const endAngle = startAngle + (numerator / denominator) * 2 * Math.PI;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = '#ffb74d';
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        function updateCake() {
+            let num = parseInt(numInput.value);
+            let den = parseInt(denInput.value);
+
+            if (isNaN(num) || isNaN(den) || den < 1) {
+                alert("Please enter valid numbers. Denominator must be at least 1.");
+                return;
+            }
+
+            if (num > den) {
+                infoEl.innerHTML = `This is <strong>${num}/${den}</strong>. That's more than a whole cake! (Or ${Math.floor(num/den)} full cakes and ${num%den}/${den} of another)`;
+            } else {
+                infoEl.innerHTML = `This is <strong>${num}/${den}</strong> of the cake.`;
+            }
+
+            const percent = ((num / den) * 100).toFixed(1);
+            percentageEl.textContent = `${percent}%`;
+
+            drawCake(num, den);
+        }
+
+        // Initial draw
+        updateCake();
+    </script>
+</body>
+</html>

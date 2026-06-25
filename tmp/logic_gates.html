@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logic Gates Explorer</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #0d0d0d;
+            color: #00ff00;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .gate-card {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            padding: 20px;
+            border-radius: 12px;
+            width: 300px;
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: border-color 0.3s;
+        }
+        .gate-card:hover { border-color: #00ff00; }
+        .inputs {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .input-bit {
+            width: 50px;
+            height: 50px;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 24px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .input-bit.active { background: #00ff00; color: #000; box-shadow: 0 0 15px #00ff00; }
+        .gate-visual {
+            font-size: 40px;
+            margin: 20px 0;
+            border: 2px solid #555;
+            padding: 10px 20px;
+            min-width: 100px;
+            text-align: center;
+        }
+        .output {
+            font-size: 32px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #222;
+        }
+        .output.on { background: #00ff00; color: #000; box-shadow: 0 0 20px #00ff00; }
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1000px;
+        }
+        table {
+            margin-top: 30px;
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 10px;
+        }
+        th { background: #1a1a1a; }
+        .highlight { background: rgba(0, 255, 0, 0.1); }
+    </style>
+</head>
+<body>
+    <h1>Logic Gates Explorer</h1>
+    
+    <div class="inputs">
+        <div class="input-bit" id="in-a">0</div>
+        <div class="input-bit" id="in-b">0</div>
+    </div>
+
+    <div class="grid">
+        <div class="gate-card" data-gate="AND">
+            <h3>AND</h3>
+            <div class="gate-visual">D</div>
+            <div class="output" id="out-AND">0</div>
+        </div>
+        <div class="gate-card" data-gate="OR">
+            <h3>OR</h3>
+            <div class="gate-visual">≥1</div>
+            <div class="output" id="out-OR">0</div>
+        </div>
+        <div class="gate-card" data-gate="NOT">
+            <h3>NOT (Input A)</h3>
+            <div class="gate-visual">−1</div>
+            <div class="output" id="out-NOT">1</div>
+        </div>
+        <div class="gate-card" data-gate="XOR">
+            <h3>XOR</h3>
+            <div class="gate-visual">=1</div>
+            <div class="output" id="out-XOR">0</div>
+        </div>
+        <div class="gate-card" data-gate="NAND">
+            <h3>NAND</h3>
+            <div class="gate-visual">D○</div>
+            <div class="output" id="out-NAND">1</div>
+        </div>
+    </div>
+
+    <table id="truth-table">
+        <thead>
+            <tr><th>A</th><th>B</th><th>Selected Gate Out</th></tr>
+        </thead>
+        <tbody>
+            <tr data-val="00"><td>0</td><td>0</td><td class="res">0</td></tr>
+            <tr data-val="01"><td>0</td><td>1</td><td class="res">0</td></tr>
+            <tr data-val="10"><td>1</td><td>0</td><td class="res">0</td></tr>
+            <tr data-val="11"><td>1</td><td>1</td><td class="res">0</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        const inA = document.getElementById('in-a');
+        const inB = document.getElementById('in-b');
+        let a = 0, b = 0;
+        let selectedGate = 'AND';
+
+        const gates = {
+            AND: (a, b) => a && b,
+            OR: (a, b) => a || b,
+            XOR: (a, b) => a !== b,
+            NAND: (a, b) => !(a && b),
+            NOR: (a, b) => !(a || b),
+            NOT: (a) => !a
+        };
+
+        const update = () => {
+            document.querySelectorAll('.output').forEach(out => {
+                const gate = out.id.split('-')[1];
+                const res = gates[gate](a, b) ? 1 : 0;
+                out.textContent = res;
+                out.classList.toggle('on', res === 1);
+            });
+
+            // Update truth table for current gate
+            document.querySelectorAll('#truth-table tbody tr').forEach(row => {
+                const val = row.dataset.val;
+                const rA = parseInt(val[0]), rB = parseInt(val[1]);
+                const res = gates[selectedGate](rA, rB) ? 1 : 0;
+                row.querySelector('.res').textContent = res;
+                row.classList.toggle('highlight', rA === a && rB === b);
+            });
+        };
+
+        inA.onclick = () => { a = 1 - a; inA.textContent = a; inA.classList.toggle('active', a === 1); update(); };
+        inB.onclick = () => { b = 1 - b; inB.textContent = b; inB.classList.toggle('active', b === 1); update(); };
+
+        document.querySelectorAll('.gate-card').forEach(card => {
+            card.onclick = () => {
+                selectedGate = card.dataset.gate;
+                document.querySelectorAll('th')[2].textContent = selectedGate + ' Out';
+                update();
+            };
+        });
+
+        update();
+    </script>
+</body>
+</html>
