@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodic Table Explorer</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --alkali: #ff9d9d;
+            --alkaline: #ffd19d;
+            --transition: #d1d1f0;
+            --post-transition: #a1d99b;
+            --metalloid: #e5f5f9;
+            --nonmetal: #9ecae1;
+            --noble: #c994c7;
+            --lanthanide: #ffed6f;
+            --actinide: #fdb462;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            display: grid;
+            grid-template-columns: repeat(18, 1fr);
+            gap: 4px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            overflow-x: auto;
+        }
+
+        .element {
+            width: 50px;
+            height: 60px;
+            border: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            font-size: 10px;
+        }
+
+        .element:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .element span {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .element .number {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 8px;
+        }
+
+        .element-detail {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            display: none;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .detail-symbol {
+            font-size: 48px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: #eee;
+        }
+
+        .detail-info h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        /* Color classes */
+        .alkali { background-color: var(--alkali); }
+        .alkaline { background-color: var(--alkaline); }
+        .transition { background-color: var(--transition); }
+        .post-transition { background-color: var(--post-transition); }
+        .metalloid { background-color: var(--metalloid); }
+        .nonmetal { background-color: var(--nonmetal); }
+        .noble { background-color: var(--noble); }
+        .lanthanide { background-color: var(--lanthanide); }
+        .actinide { background-color: var(--actinide); }
+        
+        .empty { visibility: hidden; }
+
+        @media (max-width: 800px) {
+            .element { width: 40px; height: 50px; font-size: 8px; }
+            .element span { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Periodic Table Explorer</h1>
+        <p>Click an element to see its properties</p>
+    </div>
+
+    <div class="table-container" id="table">
+        <!-- Elements will be injected here -->
+    </div>
+
+    <div class="element-detail" id="detail">
+        <div class="detail-header">
+            <div id="detailSymbol" class="detail-symbol">H</div>
+            <div class="detail-info">
+                <h2 id="detailName">Hydrogen</h2>
+                <p id="detailCategory">Diatomic Nonmetal</p>
+            </div>
+        </div>
+        <div class="detail-content">
+            <p><strong>Atomic Number:</strong> <span id="detailNumber">1</span></p>
+            <p><strong>Atomic Mass:</strong> <span id="detailMass">1.008</span> u</p>
+            <p><strong>Appearance:</strong> <span id="detailAppearance">colorless gas</span></p>
+            <p id="detailSummary">Hydrogen is a chemical element with symbol H and atomic number 1. With a standard atomic weight of 1.008, hydrogen is the lightest element on the periodic table.</p>
+        </div>
+    </div>
+
+    <script>
+        const elementsData = [
+            { n: 1, s: 'H', name: 'Hydrogen', cat: 'nonmetal', mass: '1.008', row: 1, col: 1 },
+            { n: 2, s: 'He', name: 'Helium', cat: 'noble', mass: '4.0026', row: 1, col: 18 },
+            { n: 3, s: 'Li', name: 'Lithium', cat: 'alkali', mass: '6.94', row: 2, col: 1 },
+            { n: 4, s: 'Be', name: 'Beryllium', cat: 'alkaline', mass: '9.0122', row: 2, col: 2 },
+            { n: 5, s: 'B', name: 'Boron', cat: 'metalloid', mass: '10.81', row: 2, col: 13 },
+            { n: 6, s: 'C', name: 'Carbon', cat: 'nonmetal', mass: '12.011', row: 2, col: 14 },
+            { n: 7, s: 'N', name: 'Nitrogen', cat: 'nonmetal', mass: '14.007', row: 2, col: 15 },
+            { n: 8, s: 'O', name: 'Oxygen', cat: 'nonmetal', mass: '15.999', row: 2, col: 16 },
+            { n: 9, s: 'F', name: 'Fluorine', cat: 'nonmetal', mass: '18.998', row: 2, col: 17 },
+            { n: 10, s: 'Ne', name: 'Neon', cat: 'noble', mass: '20.180', row: 2, col: 18 },
+            { n: 11, s: 'Na', name: 'Sodium', cat: 'alkali', mass: '22.990', row: 3, col: 1 },
+            { n: 12, s: 'Mg', name: 'Magnesium', cat: 'alkaline', mass: '24.305', row: 3, col: 2 },
+            { n: 13, s: 'Al', name: 'Aluminium', cat: 'post-transition', mass: '26.982', row: 3, col: 13 },
+            { n: 14, s: 'Si', name: 'Silicon', cat: 'metalloid', mass: '28.085', row: 3, col: 14 },
+            { n: 15, s: 'P', name: 'Phosphorus', cat: 'nonmetal', mass: '30.974', row: 3, col: 15 },
+            { n: 16, s: 'S', name: 'Sulfur', cat: 'nonmetal', mass: '32.06', row: 3, col: 16 },
+            { n: 17, s: 'Cl', name: 'Chlorine', cat: 'nonmetal', mass: '35.45', row: 3, col: 17 },
+            { n: 18, s: 'Ar', name: 'Argon', cat: 'noble', mass: '39.948', row: 3, col: 18 },
+            { n: 19, s: 'K', name: 'Potassium', cat: 'alkali', mass: '39.098', row: 4, col: 1 },
+            { n: 20, s: 'Ca', name: 'Calcium', cat: 'alkaline', mass: '40.078', row: 4, col: 2 },
+            { n: 26, s: 'Fe', name: 'Iron', cat: 'transition', mass: '55.845', row: 4, col: 8 },
+            { n: 29, s: 'Cu', name: 'Copper', cat: 'transition', mass: '63.546', row: 4, col: 11 },
+            { n: 30, s: 'Zn', name: 'Zinc', cat: 'transition', mass: '65.38', row: 4, col: 12 },
+            { n: 79, s: 'Au', name: 'Gold', cat: 'transition', mass: '196.97', row: 6, col: 11 },
+            { n: 80, s: 'Hg', name: 'Mercury', cat: 'transition', mass: '200.59', row: 6, col: 12 }
+        ];
+
+        const table = document.getElementById('table');
+        const detail = document.getElementById('detail');
+
+        function renderTable() {
+            for (let r = 1; r <= 7; r++) {
+                for (let c = 1; c <= 18; c++) {
+                    const elData = elementsData.find(e => e.row === r && e.col === c);
+                    const div = document.createElement('div');
+                    if (elData) {
+                        div.className = `element ${elData.cat}`;
+                        div.innerHTML = `<div class="number">${elData.n}</div><span>${elData.s}</span>${elData.name}`;
+                        div.onclick = () => showDetail(elData);
+                    } else {
+                        div.className = 'element empty';
+                    }
+                    table.appendChild(div);
+                }
+            }
+        }
+
+        function showDetail(el) {
+            detail.style.display = 'block';
+            detail.querySelector('#detailSymbol').textContent = el.s;
+            detail.querySelector('#detailSymbol').className = `detail-symbol ${el.cat}`;
+            detail.querySelector('#detailName').textContent = el.name;
+            detail.querySelector('#detailCategory').textContent = el.cat.charAt(0).toUpperCase() + el.cat.slice(1);
+            detail.querySelector('#detailNumber').textContent = el.n;
+            detail.querySelector('#detailMass').textContent = el.mass;
+            
+            // Fixed descriptions for demo
+            const descriptions = {
+                'H': 'Hydrogen is the chemical element with the symbol H and atomic number 1.',
+                'He': 'Helium is a chemical element with symbol He and atomic number 2. It is a colorless, odorless, tasteless, non-toxic, inert, monatomic gas.',
+                'Au': 'Gold is a chemical element with symbol Au and atomic number 79. It is a dense, soft, malleable and ductile metal with a bright yellow color and luster.',
+                'Hg': 'Mercury is a chemical element with symbol Hg and atomic number 80. It is commonly known as quicksilver and was formerly named hydrargyrum.'
+            };
+            detail.querySelector('#detailSummary').textContent = descriptions[el.s] || `${el.name} is a chemical element with atomic number ${el.n}.`;
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>
