@@ -13,7 +13,7 @@
   "dependencies": {
     "@google/genai": "latest",
     "@monaco-editor/react": "latest",
-    "express": "^5.2.1",
+    "express": "^5.3.0",
     "googleapis": "latest",
     "lucide-react": "^1.11.0",
     "motion": "^12.38.0",
